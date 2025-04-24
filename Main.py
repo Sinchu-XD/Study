@@ -103,23 +103,25 @@ async def handle_doubt(client: Client, message: Message):
     if len(message.command) < 2:
         await message.reply_text("❌ Please ask a doubt like:\n`/doubt What is H2O?`")
         return
+
     question = message.text.split(maxsplit=1)[1].strip().lower()
+
     if any(x in question for x in ["math", "physics", "+", "-", "*", "/", "integrate", "derive", "solve"]):
         answer = solve_numerical_problem(question)
     elif "chemistry" in question:
         cleaned = question.replace("chemistry", "").strip()
-        chem_data = get_pubchem_chemical_info(cleaned)
         theory = get_wikipedia_summary(cleaned)
         if "No Wikipedia page" in theory or "Multiple results found" in theory:
             theory = get_duckduckgo_answer(cleaned)
+        answer = f"📘 **Theory Explanation**:\n{theory}"
+    else:
+        answer = get_wikipedia_summary(question)
+        if "No Wikipedia page" in answer or "Multiple results found" in answer:
+            answer = get_duckduckgo_answer(question)
 
-            answer = f"{chem_data}\n\n📘 **Theory Explanation**:\n{theory}"
-        else:
-            wiki = get_wikipedia_summary(question)
-            answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
-        image_path = generate_image_response(answer)
-        await message.reply_photo(image_path)
-        os.remove(image_path)
+    image_path = generate_image_response(answer)
+    await message.reply_photo(image_path)
+    os.remove(image_path)
 
 async def main():
     await app.start()
