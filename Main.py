@@ -46,20 +46,26 @@ def get_duckduckgo_answer(query: str) -> str:
         return "No instant answer found."
 
 def get_pubchem_chemical_info(query: str) -> str:
-    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{query}/JSON"
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{query}/property/IUPACName,MolecularFormula,MolecularWeight,CanonicalSMILES/JSON"
+        response = requests.get(url, timeout=10)
         data = response.json()
-        if data.get('PropertyTable'):
+
+        if 'PropertyTable' in data and 'Properties' in data['PropertyTable']:
             compound_info = data['PropertyTable']['Properties'][0]
-            return f"Name: {compound_info.get('IUPACName', 'N/A')}\n" \
-                   f"Formula: {compound_info.get('MolecularFormula', 'N/A')}\n" \
-                   f"Mass: {compound_info.get('MolecularWeight', 'N/A')}\n" \
-                   f"SMILES: {compound_info.get('SMILES', 'N/A')}"
+            return (
+                f"🧪 **Chemical Information**\n\n"
+                f"• **Name**: {query.title()}\n"
+                f"• **IUPAC Name**: {compound_info.get('IUPACName', 'N/A')}\n"
+                f"• **Formula**: {compound_info.get('MolecularFormula', 'N/A')}\n"
+                f"• **Molecular Weight**: {compound_info.get('MolecularWeight', 'N/A')} g/mol\n"
+                f"• **SMILES**: {compound_info.get('CanonicalSMILES', 'N/A')}"
+            )
         else:
-            return "No information available for this compound."
-    else:
-        return "Failed to retrieve data from PubChem."
+            return "⚠️ No chemical data found. Try a different compound name like `water`, `glucose`, or `NaCl`."
+    except Exception as e:
+        return f"❌ Error fetching chemical data: {e}"
+
 
 def generate_image_response(text: str) -> str:
     img = Image.new('RGB', (600, 300), color=(255, 255, 255))
@@ -101,7 +107,9 @@ async def handle_doubt(client: Client, message: Message):
     if any(x in question for x in ["math", "physics", "+", "-", "*", "/", "integrate", "derive", "solve"]):
         answer = solve_numerical_problem(question)
     elif any(x in question for x in ["chemistry", "compound", "element", "acid", "base"]):
-        answer = get_pubchem_chemical_info(question)
+    cleaned = question.replace("chemistry", "").strip()
+    answer = get_pubchem_chemical_info(cleaned)
+
     else:
         wiki = get_wikipedia_summary(question)
         answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
