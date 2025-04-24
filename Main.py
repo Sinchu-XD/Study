@@ -107,8 +107,8 @@ async def handle_doubt(client: Client, message: Message):
     if any(x in question for x in ["math", "physics", "+", "-", "*", "/", "integrate", "derive", "solve"]):
         answer = solve_numerical_problem(question)
     elif any(x in question for x in ["chemistry", "compound", "element", "acid", "base"]):
-    cleaned = question.replace("chemistry", "").strip()
-    answer = get_pubchem_chemical_info(cleaned)
+        cleaned = question.replace("chemistry", "").strip()
+        answer = get_pubchem_chemical_info(cleaned)
 
     else:
         wiki = get_wikipedia_summary(question)
