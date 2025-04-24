@@ -110,16 +110,16 @@ async def handle_doubt(client: Client, message: Message):
         cleaned = question.replace("chemistry", "").strip()
         chem_data = get_pubchem_chemical_info(cleaned)
         theory = get_wikipedia_summary(cleaned)
-    if "No Wikipedia page" in theory or "Multiple results found" in theory:
-        theory = get_duckduckgo_answer(cleaned)
+        if "No Wikipedia page" in theory or "Multiple results found" in theory:
+            theory = get_duckduckgo_answer(cleaned)
 
-    answer = f"{chem_data}\n\n📘 **Theory Explanation**:\n{theory}"
-    else:
-        wiki = get_wikipedia_summary(question)
-        answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
-    image_path = generate_image_response(answer)
-    await message.reply_photo(image_path)
-    os.remove(image_path)
+            answer = f"{chem_data}\n\n📘 **Theory Explanation**:\n{theory}"
+        else:
+            wiki = get_wikipedia_summary(question)
+            answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
+        image_path = generate_image_response(answer)
+        await message.reply_photo(image_path)
+        os.remove(image_path)
 
 async def main():
     await app.start()
