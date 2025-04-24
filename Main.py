@@ -1,7 +1,7 @@
 import os
 import asyncio
 import random
-from pyrogram import Client, filters
+from pyrogram import Client, filters, idle
 from pyrogram.types import Message
 import wolframalpha
 import wikipedia
@@ -112,8 +112,6 @@ async def main():
     print("✅ Bot is running...")
     await idle()
     await app.stop()
-
-from pyrogram.idle import idle
 
 if __name__ == "__main__":
     asyncio.run(main())
