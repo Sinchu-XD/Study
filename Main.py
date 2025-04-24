@@ -1,4 +1,5 @@
 import os
+import asyncio
 import random
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -11,6 +12,8 @@ wolfram_app_id = "J6PGKG-GRT9RAP4X6"
 API_ID = 6067591
 API_HASH = "94e17044c2393f43fda31d3afe77b26b"
 TOKEN = "8022539593:AAFeCi9zs-OAE7w3Iv_feEQjBDqGR3bptCc"
+
+loop = asyncio.get_event_loop()
 
 app = Client(
     name="Player", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN
@@ -74,6 +77,16 @@ def generate_image_response(text: str) -> str:
     
     return file_name
 
+@app.on_message(filters.command("start") & filters.private)
+async def start_command(client: Client, message: Message):
+    await message.reply_text(
+        "👋 Hello! I’m your NEET/JEE Doubt Solver Bot.\n\n"
+        "Send any doubt using:\n"
+        "`/doubt your question`\n\n"
+        "I’ll answer it with proper solutions and concepts!"
+    )
+
+
 @app.on_message(filters.command("doubt") & filters.private)
 async def handle_doubt(client: Client, message: Message):
     question = message.text.split(maxsplit=1)[1]
@@ -94,5 +107,9 @@ async def handle_doubt(client: Client, message: Message):
     await message.reply_photo(photo=response_img)
 
     os.remove(response_img)
-
-app.run()
+    
+def init():
+    await app.start()
+    
+if __name__ == "__main__":
+    loop.run_until_complete(init())
