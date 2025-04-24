@@ -8,6 +8,9 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 wolfram_app_id = "J6PGKG-GRT9RAP4X6"
+API_ID = 6067591
+API_HASH = "94e17044c2393f43fda31d3afe77b26b"
+TOKEN = "8022539593:AAFeCi9zs-OAE7w3Iv_feEQjBDqGR3bptCc"
 
 app = Client(
     name="Player", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN
