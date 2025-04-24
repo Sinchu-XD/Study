@@ -13,11 +13,7 @@ API_ID = 6067591
 API_HASH = "94e17044c2393f43fda31d3afe77b26b"
 TOKEN = "8022539593:AAFeCi9zs-OAE7w3Iv_feEQjBDqGR3bptCc"
 
-loop = asyncio.get_event_loop()
-
-app = Client(
-    name="Player", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN
-)
+app = Client("DoubtSolverBot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
 
 def solve_numerical_problem(query: str) -> str:
     client = wolframalpha.Client(wolfram_app_id)
@@ -42,16 +38,14 @@ def get_duckduckgo_answer(query: str) -> str:
     url = f"https://api.duckduckgo.com/?q={query}&format=json&pretty=1"
     response = requests.get(url)
     data = response.json()
-    
     try:
-        return data["AbstractText"] or "No detailed answer found."
+        return data.get("AbstractText", "No detailed answer found.")
     except KeyError:
         return "No instant answer found."
 
 def get_pubchem_chemical_info(query: str) -> str:
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{query}/JSON"
     response = requests.get(url)
-    
     if response.status_code == 200:
         data = response.json()
         if data.get('PropertyTable'):
@@ -66,15 +60,25 @@ def get_pubchem_chemical_info(query: str) -> str:
         return "Failed to retrieve data from PubChem."
 
 def generate_image_response(text: str) -> str:
-    img = Image.new('RGB', (600, 200), color=(255, 255, 255))
+    img = Image.new('RGB', (600, 300), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
-
-    draw.text((10, 10), text, font=font, fill=(0, 0, 0))
-
+    lines = []
+    words = text.split()
+    line = ""
+    for word in words:
+        if len(line + word) < 70:
+            line += word + " "
+        else:
+            lines.append(line)
+            line = word + " "
+    lines.append(line)
+    y = 10
+    for line in lines:
+        draw.text((10, y), line, font=font, fill=(0, 0, 0))
+        y += 20
     file_name = f"response_{random.randint(1000, 9999)}.png"
     img.save(file_name)
-    
     return file_name
 
 @app.on_message(filters.command("start") & filters.private)
@@ -86,30 +90,31 @@ async def start_command(client: Client, message: Message):
         "I’ll answer it with proper solutions and concepts!"
     )
 
-
 @app.on_message(filters.command("doubt") & filters.private)
 async def handle_doubt(client: Client, message: Message):
-    question = message.text.split(maxsplit=1)[1]
-
-    if "math" in question or "physics" in question:
+    if len(message.command) < 2:
+        await message.reply_text("❌ Please ask a doubt like:\n`/doubt What is H2O?`")
+        return
+    question = message.text.split(maxsplit=1)[1].strip().lower()
+    if any(x in question for x in ["math", "physics", "+", "-", "*", "/", "integrate", "derive", "solve"]):
         answer = solve_numerical_problem(question)
-    elif "chemistry" in question:
+    elif any(x in question for x in ["chemistry", "compound", "element", "acid", "base"]):
         answer = get_pubchem_chemical_info(question)
     else:
-        wikipedia_answer = get_wikipedia_summary(question)
-        if wikipedia_answer == "No Wikipedia page found for this query.":
-            answer = get_duckduckgo_answer(question)
-        else:
-            answer = wikipedia_answer
+        wiki = get_wikipedia_summary(question)
+        answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
+    image_path = generate_image_response(answer)
+    await message.reply_photo(image_path)
+    os.remove(image_path)
 
-    response_img = generate_image_response(answer)
-
-    await message.reply_photo(photo=response_img)
-
-    os.remove(response_img)
-    
-def init():
+async def main():
     await app.start()
-    
+    print("✅ Bot is running...")
+    await idle()
+    await app.stop()
+
+from pyrogram.idle import idle
+
 if __name__ == "__main__":
-    loop.run_until_complete(init())
+    asyncio.run(main())
+    
