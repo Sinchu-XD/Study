@@ -106,10 +106,14 @@ async def handle_doubt(client: Client, message: Message):
     question = message.text.split(maxsplit=1)[1].strip().lower()
     if any(x in question for x in ["math", "physics", "+", "-", "*", "/", "integrate", "derive", "solve"]):
         answer = solve_numerical_problem(question)
-    elif any(x in question for x in ["chemistry", "compound", "element", "acid", "base"]):
+    elif "chemistry" in question:
         cleaned = question.replace("chemistry", "").strip()
-        answer = get_pubchem_chemical_info(cleaned)
+        chem_data = get_pubchem_chemical_info(cleaned)
+        theory = get_wikipedia_summary(cleaned)
+    if "No Wikipedia page" in theory or "Multiple results found" in theory:
+        theory = get_duckduckgo_answer(cleaned)
 
+    answer = f"{chem_data}\n\n📘 **Theory Explanation**:\n{theory}"
     else:
         wiki = get_wikipedia_summary(question)
         answer = wiki if "No Wikipedia page found" not in wiki else get_duckduckgo_answer(question)
