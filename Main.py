@@ -15,6 +15,8 @@ TOKEN = "8022539593:AAFeCi9zs-OAE7w3Iv_feEQjBDqGR3bptCc"
 
 app = Client("DoubtSolverBot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
 
+loop = asyncio.get_event_loop()
+
 def solve_numerical_problem(query: str) -> str:
     client = wolframalpha.Client(wolfram_app_id)
     try:
@@ -114,5 +116,4 @@ async def main():
     await app.stop()
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    
+    loop.run_until_complete(main())
